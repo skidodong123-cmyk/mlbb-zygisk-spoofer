@@ -1,0 +1,43 @@
+name: Build Zygisk Module
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Android NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r25c
+
+      - name: Build Native Zygisk Libraries
+        run: |
+          ndk-build NDK_PROJECT_PATH=. -B
+
+      - name: Package Flashable Zip
+        run: |
+          mkdir -p package/zygisk
+          cp libs/arm64-v8a/libmlbb_spoofer.so package/zygisk/arm64-v8a.so
+          if [ -f libs/armeabi-v7a/libmlbb_spoofer.so ]; then
+            cp libs/armeabi-v7a/libmlbb_spoofer.so package/zygisk/armeabi-v7a.so
+          fi
+          cp module.prop package/
+          if [ -f customize.sh ]; then
+            cp customize.sh package/
+          fi
+          cd package
+          zip -r ../MLBB_OnePlus15_Zygisk_v1.0.zip ./*
+
+      - name: Upload Module Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MLBB_OnePlus15_Zygisk_v1.0
+          path: MLBB_OnePlus15_Zygisk_v1.0.zip
