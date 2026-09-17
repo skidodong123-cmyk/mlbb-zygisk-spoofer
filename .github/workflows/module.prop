@@ -1,0 +1,6 @@
+id=mlbb_zygisk_spoofer
+name=MLBB OnePlus 15 Zygisk Spoofer
+version=v1.0
+versionCode=100
+author=Antigravity
+description=Per-process device spoof (OnePlus CPH2747) isolated strictly to Mobile Legends (com.mobile.legends) via Zygisk.

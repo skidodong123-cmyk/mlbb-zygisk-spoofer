@@ -1,0 +1,8 @@
+ui_print "*****************************************"
+ui_print "*   MLBB OnePlus 15 Zygisk Spoofer      *"
+ui_print "*****************************************"
+ui_print "- Target: com.mobile.legends"
+ui_print "- Spoofing profile: OnePlus CPH2747"
+ui_print "- Isolated to MLBB process via ReZygisk"
+ui_print "- Play Integrity & other apps unaffected"
+ui_print "*****************************************"
