@@ -18,21 +18,52 @@ jobs:
         with:
           ndk-version: r25c
 
-      - name: Build Native Zygisk Libraries
+      - name: Prepare Source & Build Native Libraries
         run: |
+          echo "=== Locating Android.mk ==="
+          MK_FILE=$(find . -name "Android.mk" -not -path "*/.git/*" | head -n 1)
+          if [ -z "$MK_FILE" ]; then
+            echo "ERROR: Android.mk was not found anywhere in the repository!"
+            echo "Here are the files currently in the repository:"
+            ls -la
+            exit 1
+          fi
+          echo "Found Android.mk at: $MK_FILE"
+          SRC_DIR=$(dirname "$MK_FILE")
+
+          # Ensure files are placed in ./jni for ndk-build
+          if [ "$SRC_DIR" != "./jni" ]; then
+            echo "Organizing files into ./jni..."
+            mkdir -p jni
+            cp -r "$SRC_DIR"/* jni/ 2>/dev/null || true
+          fi
+
+          # Run NDK build
           ndk-build NDK_PROJECT_PATH=. -B
 
       - name: Package Flashable Zip
         run: |
           mkdir -p package/zygisk
-          cp libs/arm64-v8a/libmlbb_spoofer.so package/zygisk/arm64-v8a.so
-          if [ -f libs/armeabi-v7a/libmlbb_spoofer.so ]; then
-            cp libs/armeabi-v7a/libmlbb_spoofer.so package/zygisk/armeabi-v7a.so
+
+          # Copy compiled libraries
+          if [ -d "libs/arm64-v8a" ]; then
+            cp libs/arm64-v8a/*.so package/zygisk/arm64-v8a.so
           fi
-          cp module.prop package/
-          if [ -f customize.sh ]; then
-            cp customize.sh package/
+          if [ -d "libs/armeabi-v7a" ]; then
+            cp libs/armeabi-v7a/*.so package/zygisk/armeabi-v7a.so
           fi
+
+          # Find and copy module.prop and customize.sh
+          PROP_FILE=$(find . -name "module.prop" -not -path "*/package/*" | head -n 1)
+          if [ -n "$PROP_FILE" ]; then
+            cp "$PROP_FILE" package/module.prop
+          fi
+
+          SH_FILE=$(find . -name "customize.sh" -not -path "*/package/*" | head -n 1)
+          if [ -n "$SH_FILE" ]; then
+            cp "$SH_FILE" package/customize.sh
+          fi
+
           cd package
           zip -r ../MLBB_OnePlus15_Zygisk_v1.0.zip ./*
 
